@@ -11,34 +11,34 @@ def main( argv ):
 
   # DEFAULT values for input parametres
   # server address makes no sense; 
-  server   = '192.168.200.240' # default server ('my' address)  (@TODO: should this be 'localhost') ?
+  server   = '192.168.200.240' # default server ('my' address)  (@TODO: shouldn't this be 'localhost') ?
   port     =  10001            # default port for this server to listening on
 
   try:
-    opts, args = getopt.getopt(argv,"hp:",["help","port="])
+    opts, args = getopt.getopt(argv,"hp:s:",["help","port=","server="])
 
   except getopt.GetoptError:
-    print( 'server_localeeg.py {--help|-h }  {-port|-p <port number>} ')
+    print( 'server_localeeg.py {--help|-h } {--port|-p <port number>} {--server|-s <server (localhost)>}')
     sys.exit(2)
   for opt, arg in opts:
     if opt in ('-h',"--help"):
-      print( 'server_localeeg.py {--help|-h } {-port|-p <port number>} ')
+      print( 'server_localeeg.py {--help|-h } {--port|-p <port number>} {--server|-s <server (localhost)>}')
       sys.exit()
     elif opt in ("-p", "--port"):
-      port = arg
+      port = int(arg)
 
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# Bind the socket to the port  (@TODO: Can't be right to set IP address too
-server_address = ('192.168.200.240', 10001)
+  # Create a TCP/IP socket
+  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  # Bind the socket to the port  (@TODO: Thhis should be 'localhost' right?)
+  server_address = (server, port)
 
-sys.stderr.write("starting up on %s port %s" % server_address)
-sock.bind(server_address)
+  sys.stderr.write("starting up on %s port %s" % server_address)
+  sock.bind(server_address)
 
-# Listen for incoming connections
-sock.listen(1)
+  # Listen for incoming connections
+  sock.listen(1)
 
-while True:
+  while True:
     # Wait for a connection
     sys.stderr.write( "waiting for a connection" )
     connection, client_address = sock.accept()

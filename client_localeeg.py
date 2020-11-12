@@ -15,22 +15,20 @@ def main( argv ):
   server   = '192.168.200.240' # default server (@TODO: should this be 'localhost') ?
   port     =  10001            # default port server is listening to ?
   fname    =  'data/s01.mat'   # default data file name 
-  fs       =  512              # framesize? 
-  utime    = 0.01              # sampling frequency?
 
   try:
     opts, args = getopt.getopt(argv,"hs:p:d:",["help","server=","port=","data"])
   except getopt.GetoptError:
-    print( 'client_localeeg.py {--help|-h } {--server|-s <serverIP or name>} {-port|-p <port number>} {--data|-d <data file name>}')
+    print( 'client_localeeg.py {--help|-h } {--server|-s <serverIP or name>} {--port|-p <port number>} {--data|-d <data file name>}')
     sys.exit(2)
   for opt, arg in opts:
     if opt in ('-h',"--help"):
-      print( 'client_localeeg.py {--help|-h } {--server|-s <serverIP or name>} {-port|-p <port number>} {--data|-d <data file name>}')
+      print( 'client_localeeg.py {--help|-h } {--server|-s <serverIP or name>} {--port|-p <port number>} {--data|-d <data file name>}')
       sys.exit()
     elif opt in ("-s", "--server"):
       server = arg 
     elif opt in ("-p", "--port"):
-      port = arg
+      port = int(arg)
     elif opt in ( "-d", "--data"):
       fname = arg
 
@@ -42,10 +40,10 @@ def main( argv ):
 
   # Connect the socket to the port where the server is listening
   server_address = (server, port)
-  print >>sys.stderr, 'connecting to %s port %s' % server_address
+  sys.stderr.write( 'connecting to %s port %s' % server_address )
   sock.connect(server_address)
   
-  datamat = loadeeg( fname, fs, utime )
+  datamat = loadeeg( fname )
 
   if datamat.ndim != 2:
     raise ValueError("INPUT must be 2-dim array!")
@@ -66,7 +64,7 @@ def main( argv ):
       counter = 0 if counter == len_off_data - 1 else counter + 1
       time.sleep(1.0 / fs)
   finally:
-    print >>sys.stderr, 'closing socket'
+    sys.stderr.write( 'closing socket' )
     sock.close()
 
 

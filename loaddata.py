@@ -3,9 +3,12 @@ import time
 from scipy import io as sio
 from random import random as rand
 
-def loadeeg( fname, fs=512, update_time=0.01 ):
+fs       =  512              # framesize? 
+utime    = 0.01              # sampling frequency?
 
-    nsample = np.int( fs*update_time )
+def loadeeg( fname ):
+
+    nsample = np.int( fs*utime )
     data = sio.loadmat(fname, squeeze_me=True, struct_as_record=False, verify_compressed_data_integrity=False)['eeg']
 
     imagery_left  = data.imagery_left  - data.imagery_left.mean(axis=1, keepdims=True)
