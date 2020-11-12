@@ -1,44 +1,74 @@
+#!/usr/bin/python3
+
+# read an EEG data file and send it off to a server/listener
+#
 import socket
-import sys
+import sys, getopt
 import time
 import numpy as np
 from loaddata import loadeeg
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Connect the socket to the port where the server is listening
-server_address = ('192.168.200.240', 10001)
-print >>sys.stderr, 'connecting to %s port %s' % server_address
 
-fs = 512
-datamat = loadeeg()
-if datamat.ndim != 2:
-    raise ValueError("INPUT must be 2-dim!")
-len_off_data = datamat.shape[1]
-sock.connect(server_address)
-try:
+def main( argv ):
+
+  # DEFAULT values for input parametres 
+  server   = '192.168.200.240' # default server (@TODO: should this be 'localhost') ?
+  port     =  10001            # default port server is listening to ?
+  fname    =  'data/s01.mat'   # default data file name 
+  fs       =  512              # framesize? 
+  utime    = 0.01              # sampling frequency?
+
+  try:
+    opts, args = getopt.getopt(argv,"hs:p:d:",["help","server=","port=","data"])
+  except getopt.GetoptError:
+    print( 'client_localeeg.py {--help|-h } {--server|-s <serverIP or name>} {-port|-p <port number>} {--data|-d <data file name>}')
+    sys.exit(2)
+  for opt, arg in opts:
+    if opt in ('-h',"--help"):
+      print( 'client_localeeg.py {--help|-h } {--server|-s <serverIP or name>} {-port|-p <port number>} {--data|-d <data file name>}')
+      sys.exit()
+    elif opt in ("-s", "--server"):
+      server = arg 
+    elif opt in ("-p", "--port"):
+      port = arg
+    elif opt in ( "-d", "--data"):
+      fname = arg
+
+  # could add 'ds' and 'utime' as command-line parameters too, 
+  # but maybe those never change ?
+        
+  # Create a TCP/IP socket
+  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+  # Connect the socket to the port where the server is listening
+  server_address = (server, port)
+  print >>sys.stderr, 'connecting to %s port %s' % server_address
+  sock.connect(server_address)
+  
+  datamat = loadeeg( fname, fs, utime )
+
+  if datamat.ndim != 2:
+    raise ValueError("INPUT must be 2-dim array!")
+
+  len_off_data = datamat.shape[1]
+
+  try:
     # Send data
-    # amount_expected = len(message)
     counter = 0
-    while True: ## amount_received < amount_expected:
-        mysample = np.array_str(datamat[:, counter].ravel())
-        # mysample = datamat[:, counter].ravel().tolist()
-        # str_sp = ' '.join(map(str, mysample))
-        # now send it and wait
-
-        #  message = 'This is the message.  It will be repeated.'
-        #  print >>sys.stderr, 'sending "%s"' % message
-        # print >>sys.stderr, 'sending "%s"' %mysample
-
-        sock.sendall(mysample)
-        data = sock.recv(10000)
-        if mysample != data:
-            raise ValueError("Error!!!") 
-        else:
-            print "True"
-        # print >>sys.stderr, 'received "%s"' % data
-        counter = 0 if counter == len_off_data - 1 else counter + 1
-        time.sleep(1.0 / fs)
-finally:
+    while True: 
+      mysample = np.array_str(datamat[:, counter].ravel())
+      sock.sendall(mysample)
+      data = sock.recv(10000)
+      if mysample != data:
+        raise ValueError("Error!!!") 
+      else:
+        print( "True" )
+      counter = 0 if counter == len_off_data - 1 else counter + 1
+      time.sleep(1.0 / fs)
+  finally:
     print >>sys.stderr, 'closing socket'
     sock.close()
+
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
